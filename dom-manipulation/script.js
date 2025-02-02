@@ -83,6 +83,8 @@ async function syncQuotes() {
   for (const quote of localQuotes) {
     await postServerData(quote);
   }
+
+  displayNotification("Quotes synced with server!");
 }
 
 // Periodic data fetching to simulate receiving updates from the server
