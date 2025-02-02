@@ -1,3 +1,5 @@
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
+
 // Array to store quotes
 let quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
 if (quotes.length === 0) {
@@ -19,6 +21,63 @@ if (quotes.length === 0) {
 function saveQuotes() {
   localStorage.setItem("quotes", JSON.stringify(quotes));
 }
+
+// Function to fetch data from the server
+async function fetchQuotesFromServer() {
+  const response = await fetch(SERVER_URL);
+  const serverQuotes = await response.json();
+  return serverQuotes.map((q) => ({ text: q.title, category: "Server" })); // Adjust as needed
+}
+
+// Function to post data to the server
+async function postServerData(data) {
+  const response = await fetch(SERVER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await response.json();
+  return result;
+}
+
+// Function to resolve conflicts between local and server data
+function resolveConflicts(serverQuotes) {
+  const localQuotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+
+  // Simple conflict resolution: Server data takes precedence
+  const mergedQuotes = [...serverQuotes];
+  localQuotes.forEach((localQuote) => {
+    if (
+      !mergedQuotes.some((serverQuote) => serverQuote.text === localQuote.text)
+    ) {
+      mergedQuotes.push(localQuote);
+    }
+  });
+
+  localStorage.setItem("quotes", JSON.stringify(mergedQuotes));
+  displayNotification("Data synced with server. Conflicts resolved.");
+}
+
+// Function to display notification to users
+function displayNotification(message) {
+  const notification = document.createElement("div");
+  notification.className = "notification";
+  notification.textContent = message;
+  document.body.appendChild(notification);
+
+  // Remove notification after 5 seconds
+  setTimeout(() => {
+    document.body.removeChild(notification);
+  }, 5000);
+}
+
+// Periodic data fetching to simulate receiving updates from the server
+setInterval(async () => {
+  const serverQuotes = await fetchQuotesFromServer();
+  resolveConflicts(serverQuotes);
+}, 30000); // Fetch every 30 seconds
 
 // Function to display a random quote or filter quotes based on category
 function showQuote(quote) {
@@ -47,8 +106,10 @@ function addQuote() {
     .value.trim();
 
   if (newQuoteText && newQuoteCategory) {
-    quotes.push({ text: newQuoteText, category: newQuoteCategory });
+    const newQuote = { text: newQuoteText, category: newQuoteCategory };
+    quotes.push(newQuote);
     saveQuotes();
+    postServerData(newQuote); // Post new quote to the server
     populateCategories();
     document.getElementById("newQuoteText").value = "";
     document.getElementById("newQuoteCategory").value = "";
