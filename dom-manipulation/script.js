@@ -32,12 +32,39 @@ function addQuote() {
     document.getElementById("newQuoteCategory").value = "";
     alert("Quote added successfully!");
   } else {
-    alert("Please enter both quote and category.");
+    alert("Please enter both a quote and a category.");
   }
+}
+
+// Function to create and display the form for adding quotes
+function createAddQuoteForm() {
+  const formContainer = document.createElement("div");
+
+  const newQuoteInput = document.createElement("input");
+  newQuoteInput.id = "newQuoteText";
+  newQuoteInput.type = "text";
+  newQuoteInput.placeholder = "Enter a new quote";
+  formContainer.appendChild(newQuoteInput);
+
+  const newQuoteCategoryInput = document.createElement("input");
+  newQuoteCategoryInput.id = "newQuoteCategory";
+  newQuoteCategoryInput.type = "text";
+  newQuoteCategoryInput.placeholder = "Enter quote category";
+  formContainer.appendChild(newQuoteCategoryInput);
+
+  const addButton = document.createElement("button");
+  addButton.textContent = "Add Quote";
+  addButton.onclick = addQuote;
+  formContainer.appendChild(addButton);
+
+  document.body.appendChild(formContainer);
 }
 
 // Add event listener to the "Show New Quote" button
 document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 
-// Display a random quote when the page loads
-document.addEventListener("DOMContentLoaded", showRandomQuote);
+// Create the form for adding new quotes
+document.addEventListener("DOMContentLoaded", () => {
+  showRandomQuote();
+  createAddQuoteForm();
+});
