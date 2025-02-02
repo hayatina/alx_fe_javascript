@@ -20,13 +20,23 @@ function saveQuotes() {
   localStorage.setItem("quotes", JSON.stringify(quotes));
 }
 
+// Function to display a random quote or filter quotes based on category
+function showQuote(quote) {
+  const quoteDisplay = document.getElementById("quoteDisplay");
+  quoteDisplay.innerHTML = `<p>${quote.text}</p><p><em>${quote.category}</em></p>`;
+  sessionStorage.setItem("lastQuote", JSON.stringify(quote)); // Save last viewed quote to Session Storage
+}
+
 // Function to display a random quote
 function showRandomQuote() {
-  const quoteDisplay = document.getElementById("quoteDisplay");
-  const randomIndex = Math.floor(Math.random() * quotes.length);
-  const randomQuote = quotes[randomIndex];
-  quoteDisplay.innerHTML = `<p>${randomQuote.text}</p><p><em>${randomQuote.category}</em></p>`;
-  sessionStorage.setItem("lastQuote", JSON.stringify(randomQuote)); // Save last viewed quote to Session Storage
+  const filteredQuotes = filterQuotes();
+  if (filteredQuotes.length > 0) {
+    const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
+    showQuote(filteredQuotes[randomIndex]);
+  } else {
+    document.getElementById("quoteDisplay").innerHTML =
+      "<p>No quotes available in this category.</p>";
+  }
 }
 
 // Function to add a new quote
@@ -39,6 +49,7 @@ function addQuote() {
   if (newQuoteText && newQuoteCategory) {
     quotes.push({ text: newQuoteText, category: newQuoteCategory });
     saveQuotes();
+    populateCategories();
     document.getElementById("newQuoteText").value = "";
     document.getElementById("newQuoteCategory").value = "";
     alert("Quote added successfully!");
@@ -93,9 +104,50 @@ function importFromJsonFile(event) {
     const importedQuotes = JSON.parse(event.target.result);
     quotes.push(...importedQuotes);
     saveQuotes();
+    populateCategories();
     alert("Quotes imported successfully!");
   };
   fileReader.readAsText(event.target.files[0]);
+}
+
+// Function to populate categories dynamically
+function populateCategories() {
+  const categories = [...new Set(quotes.map((quote) => quote.category))]; // Extract unique categories
+  const categoryFilter = document.getElementById("categoryFilter");
+  categoryFilter.innerHTML = '<option value="all">All Categories</option>'; // Reset categories dropdown
+  categories.forEach((category) => {
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    categoryFilter.appendChild(option);
+  });
+  loadLastSelectedFilter();
+}
+
+// Function to filter quotes based on selected category
+function filterQuotes() {
+  const selectedCategory = document.getElementById("categoryFilter").value;
+  localStorage.setItem("selectedCategory", selectedCategory); // Save selected category to Local Storage
+  const filteredQuotes =
+    selectedCategory === "all"
+      ? quotes
+      : quotes.filter((quote) => quote.category === selectedCategory);
+  if (filteredQuotes.length > 0) {
+    const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
+    showQuote(filteredQuotes[randomIndex]);
+  } else {
+    document.getElementById("quoteDisplay").innerHTML =
+      "<p>No quotes available in this category.</p>";
+  }
+  return filteredQuotes;
+}
+
+// Function to load the last selected filter from Local Storage
+function loadLastSelectedFilter() {
+  const selectedCategory = localStorage.getItem("selectedCategory");
+  if (selectedCategory) {
+    document.getElementById("categoryFilter").value = selectedCategory;
+  }
 }
 
 // Add event listener to the "Show New Quote" button
@@ -105,12 +157,12 @@ document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 document.addEventListener("DOMContentLoaded", () => {
   showRandomQuote();
   createAddQuoteForm();
+  populateCategories();
 
   // Display the last viewed quote from Session Storage
   const lastQuote = JSON.parse(sessionStorage.getItem("lastQuote"));
   if (lastQuote) {
-    const quoteDisplay = document.getElementById("quoteDisplay");
-    quoteDisplay.innerHTML = `<p>${lastQuote.text}</p><p><em>${lastQuote.category}</em></p>`;
+    showQuote(lastQuote);
   }
 
   // Add import and export buttons
