@@ -73,11 +73,20 @@ function displayNotification(message) {
   }, 5000);
 }
 
-// Periodic data fetching to simulate receiving updates from the server
-setInterval(async () => {
+// Function to sync quotes with the server
+async function syncQuotes() {
   const serverQuotes = await fetchQuotesFromServer();
   resolveConflicts(serverQuotes);
-}, 30000); // Fetch every 30 seconds
+
+  // Post local quotes to the server (could be further refined to only post new quotes)
+  const localQuotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+  for (const quote of localQuotes) {
+    await postServerData(quote);
+  }
+}
+
+// Periodic data fetching to simulate receiving updates from the server
+setInterval(syncQuotes, 30000); // Sync every 30 seconds
 
 // Function to display a random quote or filter quotes based on category
 function showQuote(quote) {
