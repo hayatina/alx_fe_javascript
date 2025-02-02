@@ -1,0 +1,27 @@
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
+
+// Function to fetch data from the server
+async function fetchServerData() {
+  const response = await fetch(SERVER_URL);
+  const serverData = await response.json();
+  return serverData;
+}
+
+// Function to post data to the server
+async function postServerData(data) {
+  const response = await fetch(SERVER_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await response.json();
+  return result;
+}
+
+// Periodic data fetching to simulate receiving updates from the server
+setInterval(async () => {
+  const serverQuotes = await fetchServerData();
+  resolveConflicts(serverQuotes);
+}, 30000); // Fetch every 30 seconds
